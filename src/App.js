@@ -7,6 +7,13 @@ import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
+import SweetAlert from 'sweetalert2-react';
+
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormControl from '@material-ui/core/FormControl';
+import FormLabel from '@material-ui/core/FormLabel';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -38,7 +45,9 @@ function App() {
   const [text, setText] = React.useState('');
   const [answer, setAnswer] = React.useState('');
   const [questionIndex, setQuestionIndex] = React.useState(getRandomInt(3));
-  const [feedback, setFeedback] = React.useState('');
+  const [feedback, setFeedback] = React.useState('You are wrong!');
+
+  const [showAlert, setShowAlert] = React.useState(false);
 
   const questionsArray = [
     {
@@ -62,35 +71,54 @@ function App() {
 
   let renderInput = () => (
     <>
-      <input
+      <TextField
+        id="outlined-basic"
+        label="Your answer"
+        variant="outlined"
         value={text}
         onChange={(event) => {
           setText(event.target.value);
           setAnswer(event.target.value);
         }}
-      ></input>
+      />
 
-      <button
+      <Button
+        variant="contained"
+        color="secondary"
         onClick={() => {
           setText('');
         }}
       >
         Reset
-      </button>
+      </Button>
     </>
   );
 
-  let makeOption = (option) => <option key={option}>{option}</option>;
+  let makeOption = (option) => (
+    <FormControlLabel
+      key={option}
+      value={option}
+      control={<Radio />}
+      label={option}
+    />
+  );
 
   let wrapSelect = () => (
-    <select
-      id="answers"
-      onChange={(event) => {
-        setAnswer(event.target.value);
-      }}
-    >
-      {questionsArray[questionIndex].answerOptions.map(makeOption)}
-    </select>
+    <FormControl component="fieldset">
+      <FormLabel component="legend">Your answer</FormLabel>
+      <RadioGroup
+        aria-label="answer"
+        name="answer"
+        value={answer}
+        onChange={(selectedRadio) => {
+          console.log('radio is');
+          console.log(selectedRadio.target.value);
+          setAnswer(selectedRadio.target.value);
+        }}
+      >
+        {questionsArray[questionIndex].answerOptions.map(makeOption)}
+      </RadioGroup>
+    </FormControl>
   );
 
   return (
@@ -110,42 +138,39 @@ function App() {
                     ? questionsArray[questionIndex].question
                     : 'Question is loading'}
                 </Typography>
-                <TextField
-                  id="outlined-basic"
-                  label="Your answer"
-                  variant="outlined"
-                  value={text}
-                  onChange={(event) => {
-                    setText(event.target.value);
-                    setAnswer(event.target.value);
-                  }}
-                />
+                {questionsArray[questionIndex] &&
+                questionsArray[questionIndex].openEnded
+                  ? renderInput()
+                  : ''}
+                {questionsArray[questionIndex] &&
+                !questionsArray[questionIndex].openEnded
+                  ? wrapSelect()
+                  : ''}
                 <Button
                   variant="contained"
                   color="primary"
                   onClick={() => {
                     answer === questionsArray[questionIndex].answer
-                      ? setFeedback('Your answer ' + answer + ' was correct!')
-                      : setFeedback('Your answer was NOT correct!');
+                      ? setFeedback('You are right! YAY!')
+                      : setFeedback('You are not prepared!!!');
                     setQuestionIndex(getRandomInt(questionsArray.length));
-                  }}
-                >
-                  Submit
-                </Button>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={() => {
+                    setShowAlert(true);
                     setText('');
                   }}
                 >
-                  Reset
+                  Submit
                 </Button>
               </form>
             </Paper>
           </Grid>
         </Grid>
       </Grid>
+      <SweetAlert
+        show={showAlert}
+        title={feedback}
+        // text={feedback}
+        onConfirm={() => setShowAlert(false)}
+      />
     </div>
   );
 }
